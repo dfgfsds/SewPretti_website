@@ -124,6 +124,7 @@ export default function CartSummary({ totalAmount,triggerKey  }: any) {
     }
   }, []);
 
+  const RazorPayKey=getVendorDeliveryDetailsData?.data?.data?.vendor_site_details?.payment_gateway_client_id;
   const handleCheckout = async () => {
     setLoading(true);
     setErrorMessage('')
@@ -140,10 +141,11 @@ export default function CartSummary({ totalAmount,triggerKey  }: any) {
           const { payment_order_id, final_price } = paymentAPi.data;
 
           const options = {
-            key: "rzp_live_RfZBG3eagq2RNX",
+            // key: "rzp_live_RfZBG3eagq2RNX",
+            key:RazorPayKey,
             amount: final_price * 100,
             currency: "INR",
-            name: "Chettinad Palakaaram",
+            name: "Sew Pretti",
             description: "Order Payment",
             order_id: payment_order_id,
             handler: function (response: any) {
@@ -158,7 +160,7 @@ export default function CartSummary({ totalAmount,triggerKey  }: any) {
               address: "Selected Address",
             },
             theme: {
-              color: "#D9951A",
+              color: "#f87171",
             },
           };
           // toast.success("created successfully!");
