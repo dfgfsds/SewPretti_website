@@ -56,11 +56,10 @@ export default function CartItem({ product, quantity: initialQuantity, onChange 
       <div className="w-full sm:w-24 h-24 bg-white rounded-md overflow-hidden flex-shrink-0">
         <img
           src={
-            product?.image_urls?.[0] ||
-            product?.product_variant_image_urls?.[0] ||
+            product?.product_details?.image_urls?.[0] ||
             "https://semantic-ui.com/images/wireframe/image.png"
           }
-          alt={product.name}
+          alt={product?.product_details?.name}
           className="w-full h-full object-cover"
         />
       </div>
@@ -68,16 +67,16 @@ export default function CartItem({ product, quantity: initialQuantity, onChange 
       <div className="flex-grow">
         <div className="flex justify-between">
           <div>
-            <h3 className="font-medium"> {product?.name || product?.product_variant_title || product?.product_size || ''}</h3>
-            {product.variants && product.variants.length > 0 && (
+            <h3 className="font-medium"> {product?.product_details?.name ||  ''}</h3>
+            {/* {product.variants && product.variants.length > 0 && (
               <p className="text-sm text-muted-foreground">
                 Size: {product.variants[0].size}
               </p>
-            )}
+            )} */}
           </div>
 
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
-            onClick={() => handleRemoveItem(product?.cartId)}
+            onClick={() => handleRemoveItem(product?.id)}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -89,28 +88,28 @@ export default function CartItem({ product, quantity: initialQuantity, onChange 
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-r-none"
-              onClick={() => handleUpdateCart(product?.cartId, 'decrease', product?.cartQty)}
+              onClick={() => handleUpdateCart(product?.id, 'decrease', product?.quantity)}
             // disabled={product?.cartQty <= 1}
             >
               <Minus className="h-3 w-3" />
             </Button>
 
             <div className="w-10 text-center text-sm font-medium">
-              {product?.cartQty}
+              {product?.quantity}
             </div>
 
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-l-none"
-              onClick={() => handleUpdateCart(product?.cartId, 'increase', '')}
+              onClick={() => handleUpdateCart(product?.id, 'increase', '')}
             >
               <Plus className="h-3 w-3" />
             </Button>
           </div>
 
           <div className="font-semibold">
-            {formatPrice(product?.price * product?.cartQty)}
+            {formatPrice(product?.product_details?.price * product?.quantity)}
           </div>
         </div>
       </div>
