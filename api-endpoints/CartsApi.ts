@@ -148,6 +148,11 @@ export const getAllCouponsApi = async (query: any) => {
     return axios.get(`${ApiUrls.getCoupons}${query}`);
 }
 
+  // GET CART ITEM SIZES WITH VARAINTS API
+export const getCartItemsProductSizesWithVariantsApi = async (query: any) => {
+    return axios.get(`${ApiUrls.cartItemProductSizeVariants}${query}`);
+}
+
 
 
 
