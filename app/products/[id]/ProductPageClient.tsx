@@ -1,11 +1,15 @@
 "use client";
 
+import { getCartItemsProductSizesWithVariantsApi } from "@/api-endpoints/CartsApi";
+import { getProductWithVariantSizeApi } from "@/api-endpoints/products";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
 import ProductTabs from "@/components/products/ProductTabs";
 import RelatedProducts from "@/components/products/RelatedProducts";
 import { useCartItem } from "@/context/CartItemContext";
 import { useProducts } from "@/context/ProductsContext";
+import { useVendor } from "@/context/VendorContext";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,7 +21,13 @@ export default function ProductPageClient({ id }: any) {
   const [getCartId, setCartId] = useState<string | null>(null);
   const [getUserName, setUserName] = useState<string | null>(null);
   const router = useRouter();
-console.log(id)
+  const { vendorId } = useVendor();
+
+  useEffect(() => {
+    const storedId = localStorage.getItem('userId');
+    setUserId(storedId);
+  }, []);
+
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
     const storedCartId = localStorage.getItem('cartId');
@@ -28,11 +38,29 @@ console.log(id)
     setUserName(storedUserName);
   }, []);
 
+  // getProductWithVariantSizeApi
 
   const productDetails = products?.data?.find((item: any) => String(item?.slug_name) === String(id));
 
+  // getProductWithVariantSizeData
+  const getProductWithVariantSizeData: any = useQuery({
+    queryKey: ['getProductWithVariantSizeData', productDetails?.id],
+    queryFn: () => getProductWithVariantSizeApi(`${productDetails?.id}`),
+    enabled: !!productDetails?.id
+  })
+  console.log(cartItem?.data)
+
+  // getCartItemsProductSizesWithVariantsApi
+  const getCartItemsProductSizesWithVariantsData: any = useQuery({
+    queryKey: ['getCartItemsProductSizesWithVariantsData', getUserId, vendorId],
+    queryFn: () => getCartItemsProductSizesWithVariantsApi(`?user_id=${getUserId}&vendor_id=${vendorId}`),
+    enabled: !!vendorId && !!getUserId
+  });
+
+
+  console.log(getProductWithVariantSizeData?.data?.data)
   const matchingData = cartItem?.data?.map((item: any, index: number) => {
-    const product = productDetails;
+    const product = getProductWithVariantSizeData?.data?.data;
     const isProductMatch = product?.id === item?.product;
 
     if (isProductMatch) {
@@ -52,7 +80,7 @@ console.log(id)
   return (
     <>
 
-        <div className="bg-red-200">
+      <div className="bg-red-200">
         <div className="container mx-auto px-4 py-8">
           <div className="flex mt-auto  !cursor-pointer mb-3"
             onClick={() => router.back()}
@@ -62,8 +90,9 @@ console.log(id)
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <ProductGallery product={productDetails} />
-            <ProductInfo product={productDetails} cartDetails={matchingData} getUserId={getUserId}
+            <ProductInfo product={getProductWithVariantSizeData?.data?.data} cartDetails={matchingData} getUserId={getUserId}
               getCartId={getCartId} getUserName={getUserName} totalQty={totalQty}
+              cartItem={getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items}
             />
           </div>
 

@@ -11,7 +11,9 @@ import { useProducts } from '@/context/ProductsContext';
 import { useQuery } from '@tanstack/react-query';
 import { getSizesApi, getVariantsProductApi } from '@/api-endpoints/products';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getCartItemsProductSizesWithVariantsApi } from '@/api-endpoints/CartsApi';
+import { useVendor } from '@/context/VendorContext';
 
 
 export default function CartPage() {
@@ -20,7 +22,14 @@ export default function CartPage() {
   const { products }: any = useProducts();
   const router = useRouter();
   const [triggerKey, setTriggerKey] = useState(0); // 🔑 Key to trigger refresh
+    const [userId, setUserId] = useState<string | null>(null);
+    const { vendorId } = useVendor();
 
+    useEffect(() => {
+        const storedId = localStorage.getItem('userId');
+        setUserId(storedId);
+    }, []);
+      
   const handleRefreshTrigger = () => {
     setTriggerKey((prev) => prev + 1); // 🔄 Every update/remove increases key
   };
@@ -34,6 +43,15 @@ export default function CartPage() {
     queryKey: ['getSizesData'],
     queryFn: () => getSizesApi(``),
   });
+
+
+    // getCartItemsProductSizesWithVariantsApi
+  const getCartItemsProductSizesWithVariantsData: any = useQuery({
+    queryKey: ['getCartItemsProductSizesWithVariantsData', userId, vendorId],
+    queryFn: () => getCartItemsProductSizesWithVariantsApi(`?user_id=${userId}&vendor_id=${vendorId}`),
+    enabled: !!vendorId && !!userId
+  });
+
 
   const matchingProductsArray = cartItem?.data?.map((item: any, index: number) => {
     const matchingProduct = products?.data?.find((product: any) => product.id === item.product);
@@ -64,16 +82,6 @@ export default function CartPage() {
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
         {matchingProductsArray?.length === 0 ? (
-          // <div className="flex flex-col items-center justify-center h-64">
-          //   <ShoppingBag className="h-16 w-16 text-gray-400 mb-4" />
-          //   <p className="text-gray-600">Your cart is empty</p>
-          //   <Link href="/products" className="mt-4 text-[#D9951A] hover:underline flex">
-          //     Start Shopping 
-          //     <ArrowRight className="ml-2 h-4 w-4 my-auto" />
-
-          //   </Link>
-          // </div>
-
           <div className="flex flex-col items-center justify-center h-max  text-gray-800 animate-fadeIn">
             <div className="text-6xl text-gray-400 animate-float">
               <ShoppingBag className="h-16 w-16 text-red-400 mb-4" />
@@ -107,10 +115,10 @@ export default function CartPage() {
                   </div>
 
                   <div className="space-y-6">
-                    {[...matchingProductsArray || []]
+                    {[...getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items || []]
                       ?.map((item: any) => ({
                         ...item,
-                        sortName: (item?.name || "").toLowerCase(),
+                        sortName: (item?.product_details?.name || "").toLowerCase(),
                       }))
                       ?.sort((a: any, b: any) => a?.sortName?.localeCompare(b?.sortName))
                       ?.map((product: any, index: any) => (
