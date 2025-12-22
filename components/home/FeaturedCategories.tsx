@@ -14,7 +14,6 @@ export default function FeaturedCategories() {
 
   const [slidesToShow, setSlidesToShow] = useState(5);
 
-  // ✅ Remove duplicate categories (just in case)
   const uniqueCategories = categories?.data
     ? categories.data.filter(
       (cat: any, index: number, self: any[]) =>
@@ -37,7 +36,6 @@ export default function FeaturedCategories() {
     return () => window.removeEventListener("resize", updateSlidesToShow);
   }, []);
 
-  // ✅ If only one category → disable infinite loop and autoplay
   const isSingleCategory = uniqueCategories.length <= 1;
 
   const settings = {

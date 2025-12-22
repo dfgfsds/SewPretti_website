@@ -11,6 +11,7 @@ import { deleteCartitemsApi, postCartitemApi, updateCartitemsApi } from '@/api-e
 import { InvalidateQueryFilters, useQueryClient } from '@tanstack/react-query';
 import { useVendor } from '@/context/VendorContext';
 import LoginModal from '@/app/auth/LoginModal/page';
+import { useRouter } from 'next/navigation';
 
 
 export default function ProductCard({ product }: { product: any }) {
@@ -20,6 +21,7 @@ export default function ProductCard({ product }: { product: any }) {
   const queryClient = useQueryClient();
   const { vendorId } = useVendor();
   const [signInmodal, setSignInModal] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -179,7 +181,8 @@ export default function ProductCard({ product }: { product: any }) {
               onClick={(e) => {
                 e.stopPropagation();
                 if (getUserId) {
-                  handleAddCart(product.id, 1);
+                  // handleAddCart(product.id, 1);
+                    router.push(`/products/${product?.slug_name}`);
                   //   handleAddCartAnalytics(product)
                   // });
                 } else {
