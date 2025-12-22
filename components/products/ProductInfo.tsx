@@ -34,6 +34,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
   const hasVariants = product?.variants?.length > 0;
   const hasSizes = selectedVariant?.sizes?.length > 0;
 
+  console.log(product?.price)
   // 🔑 FINAL BUTTON DISABLE LOGIC
   const disableBuyButton =
     (hasVariants && !selectedVariant) ||
@@ -41,9 +42,9 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
 
 
   const getProductPayloadKey = () => {
-    if (selectedSize?.id) return { product_size: selectedSize.id };
-    if (selectedVariant?.id) return { product_variant: selectedVariant.id };
-    return { product: product.id };
+    if (selectedSize?.id) return { product_size: selectedSize?.id };
+    if (selectedVariant?.id) return { product_variant: selectedVariant?.id };
+    return { product: product?.id };
   };
 
   const getMatchingCartItem = () => {
@@ -60,6 +61,17 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
 
     return null;
   };
+
+  const getDisplayPrice = () => {
+    if (selectedSize?.product_size_price) {
+      return selectedSize.product_size_price;
+    }
+    if (selectedVariant?.product_variant_price) {
+      return selectedVariant.product_variant_price;
+    }
+    return product?.price;
+  };
+
 
   const matchedCartItem = getMatchingCartItem();
   const currentQty = matchedCartItem?.quantity || 0;
@@ -95,10 +107,10 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
         }
       } else {
         // if (!selectedVariant) {
-          const response = await updateCartitemsApi(`${id}/${type}/`)
-          if (response) {
-            queryClient.invalidateQueries(['getCartitemsData'] as InvalidateQueryFilters);
-          }
+        const response = await updateCartitemsApi(`${id}/${type}/`)
+        if (response) {
+          queryClient.invalidateQueries(['getCartitemsData'] as InvalidateQueryFilters);
+        }
         // } else {
         //   handleAddCart(id, 1)
         // }
@@ -121,7 +133,10 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
         </div> */}
       </div>
       <div className='flex gap-5'>
-        <div className="text-2xl font-bold text-red-600">{formatPrice(product?.price)}</div>
+        {/* <div className="text-2xl font-bold text-red-600">{formatPrice(product?.price)}</div> */}
+        <div className="text-2xl font-bold text-red-600">
+          {formatPrice(getDisplayPrice())}
+        </div>
         {product?.price === product?.discount || product?.discount === 0 || product?.discount === '' ?
           ('') : (
             <>
@@ -138,12 +153,12 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
           </h2>
 
           <div className="flex gap-4 flex-wrap">
-            {product.variants.map((variant: any) => {
+            {product?.variants.map((variant: any) => {
               const active = selectedVariant?.id === variant.id;
 
               return (
                 <div
-                  key={variant.id}
+                  key={variant?.id}
                   onClick={() => {
                     setSelectedVariant(variant);
                     setSelectedSize(null);
@@ -165,8 +180,8 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
                 >
                   <div className="w-full h-[72px] flex items-center justify-center bg-white rounded-md mb-2">
                     <img
-                      src={variant.product_variant_image_urls?.[0]}
-                      alt={variant.product_variant_title}
+                      src={variant?.product_variant_image_urls?.[0]}
+                      alt={variant?.product_variant_title}
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
@@ -175,7 +190,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
                     className={`text-base font-bold capitalize truncate ${active ? "text-red-600" : "text-gray-700"
                       }`}
                   >
-                    {variant.product_variant_title}
+                    {variant?.product_variant_title}
                   </p>
                 </div>
               );
@@ -185,17 +200,17 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
       )}
       {selectedVariant?.sizes?.length > 0 && (
         <div className="mt-6">
-         <h2 className="text-xl font-extrabold mb-3 text-gray-800">
+          <h2 className="text-xl font-extrabold mb-3 text-gray-800">
             Select Size
           </h2>
 
           <div className="flex gap-3 flex-wrap">
-            {selectedVariant.sizes.map((size: any) => {
-              const active = selectedSize?.id === size.id;
+            {selectedVariant?.sizes?.map((size: any) => {
+              const active = selectedSize?.id === size?.id;
 
               return (
                 <button
-                  key={size.id}
+                  key={size?.id}
                   type="button"
                   onClick={() => setSelectedSize(size)}
                   className={`
@@ -212,7 +227,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
                     }
             `}
                 >
-                  {size.product_size}
+                  {size?.product_size}
                 </button>
               );
             })}
@@ -258,7 +273,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
               variant="outline"
               size="icon"
               onClick={() =>
-                handleUpdateCart(matchedCartItem.id, "decrease", currentQty)
+                handleUpdateCart(matchedCartItem?.id, "decrease", currentQty)
               }
             >
               <Minus />
@@ -272,7 +287,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
               variant="outline"
               size="icon"
               onClick={() =>
-                handleUpdateCart(matchedCartItem.id, "increase", currentQty)
+                handleUpdateCart(matchedCartItem?.id, "increase", currentQty)
               }
             >
               <Plus />
@@ -307,7 +322,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
             handleAddCart(
               selectedSize?.id ||
               selectedVariant?.id ||
-              product.id,
+              product?.id,
               1
             );
           }}
