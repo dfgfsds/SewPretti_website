@@ -22,14 +22,14 @@ export default function CartPage() {
   const { products }: any = useProducts();
   const router = useRouter();
   const [triggerKey, setTriggerKey] = useState(0); // 🔑 Key to trigger refresh
-    const [userId, setUserId] = useState<string | null>(null);
-    const { vendorId } = useVendor();
+  const [userId, setUserId] = useState<string | null>(null);
+  const { vendorId } = useVendor();
 
-    useEffect(() => {
-        const storedId = localStorage.getItem('userId');
-        setUserId(storedId);
-    }, []);
-      
+  useEffect(() => {
+    const storedId = localStorage.getItem('userId');
+    setUserId(storedId);
+  }, []);
+
   const handleRefreshTrigger = () => {
     setTriggerKey((prev) => prev + 1); // 🔄 Every update/remove increases key
   };
@@ -45,7 +45,7 @@ export default function CartPage() {
   });
 
 
-    // getCartItemsProductSizesWithVariantsApi
+  // getCartItemsProductSizesWithVariantsApi
   const getCartItemsProductSizesWithVariantsData: any = useQuery({
     queryKey: ['getCartItemsProductSizesWithVariantsData', userId, vendorId],
     queryFn: () => getCartItemsProductSizesWithVariantsApi(`?user_id=${userId}&vendor_id=${vendorId}`),
@@ -68,14 +68,19 @@ export default function CartPage() {
     };
   });
 
-  const totalAmount = matchingProductsArray?.reduce((acc: number, item: any) => {
-    const price =
-      item.price ??
-      item?.product_variant_price ??
-      item?.product_size_price ??
-      0;
-    return acc + price * (item.cartQty || 1);
-  }, 0);
+  const totalAmount = getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items?.filter?.((item: any) => item?.product_details?.status === true && item?.product_details?.quantity !== 0)?.reduce((acc: number, item: any) => {
+    const price = item?.product_details?.price
+    return acc + price * (item?.quantity || 1);
+  }, 0)
+
+  // const totalAmount = matchingProductsArray?.reduce((acc: number, item: any) => {
+  //   const price =
+  //     item.price ??
+  //     item?.product_variant_price ??
+  //     item?.product_size_price ??
+  //     0;
+  //   return acc + price * (item.cartQty || 1);
+  // }, 0);
 
   return (
     <div className="bg-white">
@@ -116,6 +121,7 @@ export default function CartPage() {
 
                   <div className="space-y-6">
                     {[...getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items || []]
+                      // ?.filter((item: any) => item?.product_details?.status === true || item?.quantity !== 0)
                       ?.map((item: any) => ({
                         ...item,
                         sortName: (item?.product_details?.name || "").toLowerCase(),

@@ -34,7 +34,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
   const hasVariants = product?.variants?.length > 0;
   const hasSizes = selectedVariant?.sizes?.length > 0;
 
-
+  console.log(selectedSize?.product_size_status)
   // 🔑 FINAL BUTTON DISABLE LOGIC
   const disableBuyButton =
     (hasVariants && !selectedVariant) ||
@@ -75,6 +75,24 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
 
   const matchedCartItem = getMatchingCartItem();
   const currentQty = matchedCartItem?.quantity || 0;
+
+  const getButtonText = () => {
+    if (product?.status === false) return "Not Available";
+    if (product?.stock_quantity === 0) return "Out of Stock";
+    if (selectedVariant && selectedVariant?.product_variant_status === false)
+      return "Variant Not Available";
+    if (selectedSize && selectedSize?.product_size_status === false)
+      return "Size Not Available";
+    if (disableBuyButton) return "Select Variant / Size";
+    return "Add to Cart";
+  };
+
+  const isButtonDisabled =
+    disableBuyButton ||
+    product?.stock_quantity === 0 ||
+    product?.status === false ||
+    selectedVariant?.product_variant_status === false ||
+    selectedSize?.product_size_status === false;
 
   const handleAddCart = async (id: any, qty: any) => {
     const payload = {
@@ -207,17 +225,17 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
           </h2>
 
           <div className="flex gap-3 flex-wrap">
-          {selectedVariant?.sizes
-            ?.filter((item:any)=>item?.product_size_status === true)
-            ?.map((size: any) => {
-              const active = selectedSize?.id === size?.id;
+            {selectedVariant?.sizes
+              ?.filter((item: any) => item?.product_size_status === true)
+              ?.map((size: any) => {
+                const active = selectedSize?.id === size?.id;
 
-              return (
-                <button
-                  key={size?.id}
-                  type="button"
-                  onClick={() => setSelectedSize(size)}
-                  className={`
+                return (
+                  <button
+                    key={size?.id}
+                    type="button"
+                    onClick={() => setSelectedSize(size)}
+                    className={`
               px-4 py-2
               rounded-full
               text-lg
@@ -226,48 +244,18 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
               transition-all
               duration-200
               ${active
-                      ? "bg-red-500 text-white border-red-500 shadow"
-                      : "bg-white text-gray-800 border-gray-300 hover:border-red-400 hover:text-red-600"
-                    }
+                        ? "bg-red-500 text-white border-red-500 shadow"
+                        : "bg-white text-gray-800 border-gray-300 hover:border-red-400 hover:text-red-600"
+                      }
             `}
-                >
-                  {size?.product_size}
-                </button>
-              );
-            })}
+                  >
+                    {size?.product_size}
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}
-      {/* {cartDetails?.length && cartDetails[0]?.cartQty > 0 ? (
-        <div>
-          <label className="text-sm font-medium mb-2 block">Quantity</label>
-          <div className="flex items-center w-full md:w-[180px]">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-r-none h-10 w-10"
-              onClick={() =>
-                handleUpdateCart(cartDetails[0]?.cartId, 'decrease', cartDetails[0]?.cartQty)
-              }
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-
-            <div className="text-red-800 flex-1 h-10 border-y border-input flex items-center justify-center font-medium">
-              {totalQty ? totalQty : ''}
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-l-none h-10 w-10"
-              onClick={() => handleUpdateCart(cartDetails[0]?.cartId, 'increase', '')}
-
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div> */}
       {currentQty > 0 ? (
         <div>
           <label className="text-sm font-medium mb-2 block">Quantity</label>
@@ -299,8 +287,63 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
           </div>
         </div>
       ) : (
+        //       <button
+        //         disabled={disableBuyButton || product?.stock_quantity === 0 || product?.status === false || selectedVariant?.product_variant_status === false || selectedSize?.product_size_status === false}
+        //         className={`
+        //   relative
+        //   mt-8
+        //   w-full
+        //   flex items-center justify-center gap-2
+        //   px-6 py-3
+        //   rounded-full
+        //   font-semibold
+        //   overflow-hidden
+        //   transition-all
+        //   duration-300
+        //   ${disableBuyButton
+        //             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        //             : "bg-red-500 hover:bg-red-600 text-white shadow-md"
+        //           }
+        // `}
+        //         onClick={(e) => {
+        //           e.stopPropagation();
+        //           if (!getUserId) {
+        //             setSignInModal(true);
+        //             return;
+        //           }
+        //           handleAddCart(
+        //             selectedSize?.id ||
+        //             selectedVariant?.id ||
+        //             product?.id,
+        //             1
+        //           );
+        //         }}
+        //       >
+        //         {/* CONTENT */}
+        //         <span className="relative z-10 flex items-center gap-2">
+        //           <ShoppingBag className="h-5 w-5" />
+        //           Add to Cart
+        //         </span>
+
+        //         {/* ✨ SHINE ANIMATION (ONLY WHEN ENABLED) */}
+        //         {!disableBuyButton && (
+        //           <span
+        //             className="
+        //       absolute
+        //       inset-0
+        //       w-1/3
+        //       bg-gradient-to-l
+        //       from-white/60
+        //       to-transparent
+        //       opacity-40
+        //       skew-x-[-30deg]
+        //       animate-shine
+        //     "
+        //           />
+        //         )}
+        //       </button>
         <button
-          disabled={disableBuyButton || product?.stock_quantity === 0}
+          disabled={isButtonDisabled}
           className={`
     relative
     mt-8
@@ -312,17 +355,20 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
     overflow-hidden
     transition-all
     duration-300
-    ${disableBuyButton
+    ${isButtonDisabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-red-500 hover:bg-red-600 text-white shadow-md"
             }
   `}
           onClick={(e) => {
             e.stopPropagation();
+            if (isButtonDisabled) return;
+
             if (!getUserId) {
               setSignInModal(true);
               return;
             }
+
             handleAddCart(
               selectedSize?.id ||
               selectedVariant?.id ||
@@ -331,14 +377,13 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
             );
           }}
         >
-          {/* CONTENT */}
+
           <span className="relative z-10 flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            Add to Cart
+            {!isButtonDisabled && <ShoppingBag className="h-5 w-5" />}
+            {getButtonText()}
           </span>
 
-          {/* ✨ SHINE ANIMATION (ONLY WHEN ENABLED) */}
-          {!disableBuyButton && (
+          {!isButtonDisabled && (
             <span
               className="
         absolute
@@ -354,7 +399,6 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
             />
           )}
         </button>
-
 
       )}
       {signInmodal && (
