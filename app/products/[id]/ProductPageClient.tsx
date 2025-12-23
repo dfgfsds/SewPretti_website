@@ -1,10 +1,119 @@
+// "use client";
+
+// import { getCartItemsProductSizesWithVariantsApi } from "@/api-endpoints/CartsApi";
+// import { getProductWithVariantSizeApi } from "@/api-endpoints/products";
+// import ProductGallery from "@/components/products/ProductGallery";
+// import ProductInfo from "@/components/products/ProductInfo";
+// import ProductTabs from "@/components/products/ProductTabs";
+// import RelatedProducts from "@/components/products/RelatedProducts";
+// import { useCartItem } from "@/context/CartItemContext";
+// import { useProducts } from "@/context/ProductsContext";
+// import { useVendor } from "@/context/VendorContext";
+// import { useQuery } from "@tanstack/react-query";
+// import { ArrowLeft } from "lucide-react";
+// import { useRouter } from "next/navigation";
+// import { useEffect, useState } from "react";
+
+// export default function ProductPageClient({ id }: any) {
+//   const { products, isAuthenticated, isLoading }: any = useProducts();
+//   const { cartItem }: any = useCartItem();
+//   const [getUserId, setUserId] = useState<string | null>(null);
+//   const [getCartId, setCartId] = useState<string | null>(null);
+//   const [getUserName, setUserName] = useState<string | null>(null);
+//   const router = useRouter();
+//   const { vendorId } = useVendor();
+
+//   useEffect(() => {
+//     const storedId = localStorage.getItem('userId');
+//     setUserId(storedId);
+//   }, []);
+
+//   useEffect(() => {
+//     const storedUserId = localStorage.getItem('userId');
+//     const storedCartId = localStorage.getItem('cartId');
+//     const storedUserName = localStorage.getItem('userName');
+
+//     setUserId(storedUserId);
+//     setCartId(storedCartId);
+//     setUserName(storedUserName);
+//   }, []);
+
+//   // getProductWithVariantSizeApi
+
+//   const productDetails = products?.data?.find((item: any) => String(item?.slug_name) === String(id));
+
+//   // getProductWithVariantSizeData
+//   const getProductWithVariantSizeData: any = useQuery({
+//     queryKey: ['getProductWithVariantSizeData', productDetails?.id],
+//     queryFn: () => getProductWithVariantSizeApi(`${productDetails?.id}`),
+//     enabled: !!productDetails?.id
+//   })
+
+
+//   // getCartItemsProductSizesWithVariantsApi
+//   const getCartItemsProductSizesWithVariantsData: any = useQuery({
+//     queryKey: ['getCartItemsProductSizesWithVariantsData', getUserId, vendorId],
+//     queryFn: () => getCartItemsProductSizesWithVariantsApi(`?user_id=${getUserId}&vendor_id=${vendorId}`),
+//     enabled: !!vendorId && !!getUserId
+//   });
+
+
+
+//   const matchingData = cartItem?.data?.map((item: any, index: number) => {
+//     const product = getProductWithVariantSizeData?.data?.data;
+//     const isProductMatch = product?.id === item?.product;
+
+//     if (isProductMatch) {
+//       return {
+//         Aid: index,
+//         cartId: item?.id,
+//         cartQty: item?.quantity,
+//         ...product,
+//       };
+//     }
+
+//     return null;
+//   }).filter(Boolean);
+
+//   const totalQty = matchingData?.reduce((sum: number, item: any) => sum + (item?.cartQty || 0), 0);
+
+//   return (
+//     <>
+
+//       <div className="bg-red-200">
+//         <div className="container mx-auto px-4 py-8">
+//           <div className="flex mt-auto  !cursor-pointer mb-3"
+//             onClick={() => router.back()}
+//           >
+//             <ArrowLeft />
+//             <h1>Back</h1>
+//           </div>
+//           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+//             <ProductGallery product={productDetails} />
+//             <ProductInfo product={getProductWithVariantSizeData?.data?.data} cartDetails={matchingData} getUserId={getUserId}
+//               getCartId={getCartId} getUserName={getUserName} totalQty={totalQty}
+//               cartItem={getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items}
+//             />
+//           </div>
+
+//           {/* <ProductTabs product={productDetails} /> */}
+
+//           <RelatedProducts currentProductId={productDetails?.category} />
+//         </div>
+//       </div>
+//     </>
+//   )
+
+// }
+
+
+
 "use client";
 
 import { getCartItemsProductSizesWithVariantsApi } from "@/api-endpoints/CartsApi";
 import { getProductWithVariantSizeApi } from "@/api-endpoints/products";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
-import ProductTabs from "@/components/products/ProductTabs";
 import RelatedProducts from "@/components/products/RelatedProducts";
 import { useCartItem } from "@/context/CartItemContext";
 import { useProducts } from "@/context/ProductsContext";
@@ -12,96 +121,123 @@ import { useVendor } from "@/context/VendorContext";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function ProductPageClient({ id }: any) {
-  const { products, isAuthenticated, isLoading }: any = useProducts();
+  const router = useRouter();
+  const { vendorId } = useVendor();
+  const { products, isLoading: productsLoading }: any = useProducts();
   const { cartItem }: any = useCartItem();
+
   const [getUserId, setUserId] = useState<string | null>(null);
   const [getCartId, setCartId] = useState<string | null>(null);
   const [getUserName, setUserName] = useState<string | null>(null);
-  const router = useRouter();
-  const { vendorId } = useVendor();
 
+  /* -------------------- LOCAL STORAGE -------------------- */
   useEffect(() => {
-    const storedId = localStorage.getItem('userId');
-    setUserId(storedId);
+    setUserId(localStorage.getItem("userId"));
+    setCartId(localStorage.getItem("cartId"));
+    setUserName(localStorage.getItem("userName"));
   }, []);
 
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    const storedCartId = localStorage.getItem('cartId');
-    const storedUserName = localStorage.getItem('userName');
+  /* -------------------- SAFE PRODUCT FIND -------------------- */
+  const productDetails = useMemo(() => {
+    if (!products?.data) return null;
+    return products.data.find(
+      (item: any) => String(item.slug_name) === String(id)
+    );
+  }, [products, id]);
 
-    setUserId(storedUserId);
-    setCartId(storedCartId);
-    setUserName(storedUserName);
-  }, []);
-
-  // getProductWithVariantSizeApi
-
-  const productDetails = products?.data?.find((item: any) => String(item?.slug_name) === String(id));
-
-  // getProductWithVariantSizeData
-  const getProductWithVariantSizeData: any = useQuery({
-    queryKey: ['getProductWithVariantSizeData', productDetails?.id],
-    queryFn: () => getProductWithVariantSizeApi(`${productDetails?.id}`),
-    enabled: !!productDetails?.id
-  })
-
-
-  // getCartItemsProductSizesWithVariantsApi
-  const getCartItemsProductSizesWithVariantsData: any = useQuery({
-    queryKey: ['getCartItemsProductSizesWithVariantsData', getUserId, vendorId],
-    queryFn: () => getCartItemsProductSizesWithVariantsApi(`?user_id=${getUserId}&vendor_id=${vendorId}`),
-    enabled: !!vendorId && !!getUserId
+  /* -------------------- PRODUCT QUERY (HOOK ALWAYS CALLED) -------------------- */
+  const productQuery: any = useQuery({
+    queryKey: ["getProductWithVariantSizeData", productDetails?.id],
+    queryFn: () =>
+      getProductWithVariantSizeApi(`${productDetails?.id}`),
+    enabled: !!productDetails?.id, // 👈 IMPORTANT
   });
 
+  /* -------------------- CART QUERY (HOOK ALWAYS CALLED) -------------------- */
+  const cartQuery: any = useQuery({
+    queryKey: ["getCartItemsProductSizesWithVariantsData", getUserId, vendorId],
+    queryFn: () =>
+      getCartItemsProductSizesWithVariantsApi(
+        `?user_id=${getUserId}&vendor_id=${vendorId}`
+      ),
+    enabled: !!getUserId && !!vendorId,
+  });
 
+  /* -------------------- UI STATES -------------------- */
+  if (productsLoading) {
+    return <div className="p-10 text-center">Loading product...</div>;
+  }
 
-  const matchingData = cartItem?.data?.map((item: any, index: number) => {
-    const product = getProductWithVariantSizeData?.data?.data;
-    const isProductMatch = product?.id === item?.product;
-
-    if (isProductMatch) {
-      return {
-        Aid: index,
-        cartId: item?.id,
-        cartQty: item?.quantity,
-        ...product,
-      };
-    }
-
-    return null;
-  }).filter(Boolean);
-
-  const totalQty = matchingData?.reduce((sum: number, item: any) => sum + (item?.cartQty || 0), 0);
-
-  return (
-    <>
-
-      <div className="bg-red-200">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex mt-auto  !cursor-pointer mb-3"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft />
-            <h1>Back</h1>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-            <ProductGallery product={productDetails} />
-            <ProductInfo product={getProductWithVariantSizeData?.data?.data} cartDetails={matchingData} getUserId={getUserId}
-              getCartId={getCartId} getUserName={getUserName} totalQty={totalQty}
-              cartItem={getCartItemsProductSizesWithVariantsData?.data?.data?.cart_items}
-            />
-          </div>
-
-          {/* <ProductTabs product={productDetails} /> */}
-
-          <RelatedProducts currentProductId={productDetails?.category} />
-        </div>
+  if (!productDetails) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        Product not found
       </div>
-    </>
-  )
+    );
+  }
 
+  if (productQuery.isLoading) {
+    return <div className="p-10 text-center">Loading details...</div>;
+  }
+
+  /* -------------------- DATA -------------------- */
+  const productData = productQuery?.data?.data;
+  const cartItems =
+    cartQuery?.data?.data?.cart_items || [];
+
+  const matchingData =
+    cartItem?.data
+      ?.map((item: any, index: number) => {
+        if (item?.product === productData?.id) {
+          return {
+            Aid: index,
+            cartId: item?.id,
+            cartQty: item?.quantity,
+            ...productData,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) || [];
+
+  const totalQty = matchingData.reduce(
+    (sum: number, item: any) => sum + (item?.cartQty || 0),
+    0
+  );
+
+  /* -------------------- UI -------------------- */
+  return (
+    <div className="bg-red-200">
+      <div className="container mx-auto px-4 py-8">
+        {/* BACK */}
+        <div
+          className="flex items-center gap-2 cursor-pointer mb-4"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft />
+          <span>Back</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          <ProductGallery product={productDetails} />
+
+          <ProductInfo
+            product={productData}
+            cartDetails={matchingData}
+            getUserId={getUserId}
+            getCartId={getCartId}
+            getUserName={getUserName}
+            totalQty={totalQty}
+            cartItem={cartItems}
+          />
+        </div>
+
+        <RelatedProducts currentProductId={productDetails?.category} />
+      </div>
+    </div>
+  );
 }
+
