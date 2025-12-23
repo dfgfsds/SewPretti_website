@@ -34,7 +34,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
   const hasVariants = product?.variants?.length > 0;
   const hasSizes = selectedVariant?.sizes?.length > 0;
 
-  console.log(product?.price)
+
   // 🔑 FINAL BUTTON DISABLE LOGIC
   const disableBuyButton =
     (hasVariants && !selectedVariant) ||
@@ -153,17 +153,19 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
           </h2>
 
           <div className="flex gap-4 flex-wrap">
-            {product?.variants.map((variant: any) => {
-              const active = selectedVariant?.id === variant.id;
+            {product?.variants?.
+              filter((item: any) => item?.product_variant_status === true)
+              ?.map((variant: any) => {
+                const active = selectedVariant?.id === variant.id;
 
-              return (
-                <div
-                  key={variant?.id}
-                  onClick={() => {
-                    setSelectedVariant(variant);
-                    setSelectedSize(null);
-                  }}
-                  className={`
+                return (
+                  <div
+                    key={variant?.id}
+                    onClick={() => {
+                      setSelectedVariant(variant);
+                      setSelectedSize(null);
+                    }}
+                    className={`
               cursor-pointer
               w-[96px]
               p-2
@@ -173,28 +175,28 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
               transition-all
               duration-200
               ${active
-                      ? "border-red-500 bg-red-50 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-400 hover:shadow-sm"
-                    }
+                        ? "border-red-500 bg-red-50 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-gray-400 hover:shadow-sm"
+                      }
             `}
-                >
-                  <div className="w-full h-[72px] flex items-center justify-center bg-white rounded-md mb-2">
-                    <img
-                      src={variant?.product_variant_image_urls?.[0]}
-                      alt={variant?.product_variant_title}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-
-                  <p
-                    className={`text-base font-bold capitalize truncate ${active ? "text-red-600" : "text-gray-700"
-                      }`}
                   >
-                    {variant?.product_variant_title}
-                  </p>
-                </div>
-              );
-            })}
+                    <div className="w-full h-[72px] flex items-center justify-center bg-white rounded-md mb-2">
+                      <img
+                        src={variant?.product_variant_image_urls?.[0]}
+                        alt={variant?.product_variant_title}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+
+                    <p
+                      className={`text-base font-bold capitalize truncate ${active ? "text-red-600" : "text-gray-700"
+                        }`}
+                    >
+                      {variant?.product_variant_title}
+                    </p>
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}
@@ -205,7 +207,9 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
           </h2>
 
           <div className="flex gap-3 flex-wrap">
-            {selectedVariant?.sizes?.map((size: any) => {
+          {selectedVariant?.sizes
+            ?.filter((item:any)=>item?.product_size_status === true)
+            ?.map((size: any) => {
               const active = selectedSize?.id === size?.id;
 
               return (

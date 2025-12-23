@@ -48,7 +48,7 @@ export default function ProductPageClient({ id }: any) {
     queryFn: () => getProductWithVariantSizeApi(`${productDetails?.id}`),
     enabled: !!productDetails?.id
   })
-  console.log(cartItem?.data)
+
 
   // getCartItemsProductSizesWithVariantsApi
   const getCartItemsProductSizesWithVariantsData: any = useQuery({
@@ -58,7 +58,7 @@ export default function ProductPageClient({ id }: any) {
   });
 
 
-  console.log(getProductWithVariantSizeData?.data?.data)
+
   const matchingData = cartItem?.data?.map((item: any, index: number) => {
     const product = getProductWithVariantSizeData?.data?.data;
     const isProductMatch = product?.id === item?.product;
