@@ -92,7 +92,9 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
     product?.stock_quantity === 0 ||
     product?.status === false ||
     selectedVariant?.product_variant_status === false ||
-    selectedSize?.product_size_status === false;
+    selectedVariant?.product_variant_stock_quantity === 0 ||
+    selectedSize?.product_size_status === false ||
+    selectedSize?.product_size_stock_quantity === 0;
 
   const handleAddCart = async (id: any, qty: any) => {
     const payload = {
