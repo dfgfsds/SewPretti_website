@@ -107,7 +107,7 @@ export default function ProfileOrders() {
                        </div>
                        
                        <div className="flex-grow">
-                         <h3 className="font-medium">{product?.product?.name}</h3>
+                         <h3 className="font-medium">{product?.product_details?.name}</h3>
                          <p className="text-sm text-muted-foreground">
                            Qty: {product?.quantity}
                          </p>
@@ -115,7 +115,7 @@ export default function ProfileOrders() {
                        
                        <div>
                          <Button variant="outline" size="sm"
-                         onClick={() => router.push(`/products/${product?.product?.id}`)}
+                         onClick={() => router.push(`/products/${product?.product_details?.slug_name}`)}
                          >
                            Buy Again
                          </Button>

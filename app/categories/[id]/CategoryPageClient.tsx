@@ -228,9 +228,11 @@ export default function CategoryPageClient({ id }: { id: string }) {
         </button>
 
         {/* Category Name */}
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-10 capitalize">
-          {category?.name} {subcategories.length > 0 ? 'Subcategories' : 'Products'}
-        </h1>
+        {subcategories.length > 0 && (
+          <h1 className="text-3xl font-bold text-gray-900 text-center mb-10 capitalize">
+            {category?.name} {subcategories.length > 0 ? 'Subcategories' : 'Products'}
+          </h1>
+        )}
 
         {/* ⭐ SHOW SUBCATEGORIES ONLY IF THEY EXIST */}
         {subcategories.length > 0 && (
