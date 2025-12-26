@@ -62,39 +62,87 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
     return null;
   };
 
-  const getDisplayPrice = () => {
-    if (selectedSize?.product_size_price) {
-      return selectedSize.product_size_price;
+  // const getDisplayPrice = () => {
+  //   if (selectedSize?.product_size_price) {
+  //     return selectedSize.product_size_price;
+  //   }
+  //   if (selectedVariant?.product_variant_price) {
+  //     return selectedVariant.product_variant_price;
+  //   }
+  //   return product?.price;
+  // };
+
+  const getDisplayPricing = () => {
+    // 1️⃣ Size selected
+    if (selectedSize) {
+      return {
+        price: Number(selectedSize.product_size_price),
+        discount: Number(selectedSize.product_size_discount),
+      };
     }
-    if (selectedVariant?.product_variant_price) {
-      return selectedVariant.product_variant_price;
+
+    // 2️⃣ Variant selected (no size)
+    if (selectedVariant) {
+      return {
+        price: Number(selectedVariant.product_variant_price),
+        discount: Number(selectedVariant.product_variant_discount),
+      };
     }
-    return product?.price;
+
+    // 3️⃣ Normal product
+    return {
+      price: Number(product?.price),
+      discount: Number(product?.discount),
+    };
   };
 
+  const { price, discount } = getDisplayPricing();
 
   const matchedCartItem = getMatchingCartItem();
   const currentQty = matchedCartItem?.quantity || 0;
 
-  const getButtonText = () => {
-    if (product?.status === false) return "Not Available";
-    if (product?.stock_quantity === 0) return "Out of Stock";
-    if (selectedVariant && selectedVariant?.product_variant_status === false)
-      return "Variant Not Available";
-    if (selectedSize && selectedSize?.product_size_status === false)
-      return "Size Not Available";
-    if (disableBuyButton) return "Select Variant / Size";
-    return "Add to Cart";
-  };
+  const getAvailability = () => {
+    // 🟥 1. SIZE SELECTED
+    if (selectedSize) {
+      if (!selectedSize.product_size_status)
+        return { disabled: true, text: "Size Not Available" };
 
-  const isButtonDisabled =
-    disableBuyButton ||
-    product?.stock_quantity === 0 ||
-    product?.status === false ||
-    selectedVariant?.product_variant_status === false ||
-    selectedVariant?.product_variant_stock_quantity === 0 ||
-    selectedSize?.product_size_status === false ||
-    selectedSize?.product_size_stock_quantity === 0;
+      if (Number(selectedSize.product_size_stock_quantity) === 0)
+        return { disabled: true, text: "Out of Stock" };
+
+      return { disabled: false, text: "Add to Cart" };
+    }
+
+    // 🟧 2. VARIANT SELECTED (NO SIZE)
+    if (selectedVariant) {
+      if (!selectedVariant.product_variant_status)
+        return { disabled: true, text: "Variant Not Available" };
+
+      if (Number(selectedVariant.product_variant_stock_quantity) === 0)
+        return { disabled: true, text: "Out of Stock" };
+
+      // variant has sizes → force selection
+      if (selectedVariant?.sizes?.length > 0)
+        return { disabled: true, text: "Select Size" };
+
+      return { disabled: false, text: "Add to Cart" };
+    }
+
+    // 🟩 3. NORMAL PRODUCT
+    if (!product?.status)
+      return { disabled: true, text: "Not Available" };
+
+    if (Number(product?.stock_quantity) === 0)
+      return { disabled: true, text: "Out of Stock" };
+
+    // product has variants → force selection
+    if (product?.variants?.length > 0)
+      return { disabled: true, text: "Select Variant" };
+
+    return { disabled: false, text: "Add to Cart" };
+  };
+  const availability = getAvailability();
+
 
   const handleAddCart = async (id: any, qty: any) => {
     const payload = {
@@ -154,7 +202,7 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
       </div>
       <div className='flex gap-5'>
         {/* <div className="text-2xl font-bold text-red-600">{formatPrice(product?.price)}</div> */}
-        <div className="text-2xl font-bold text-red-600">
+        {/* <div className="text-2xl font-bold text-red-600">
           {formatPrice(getDisplayPrice())}
         </div>
         {product?.price === product?.discount || product?.discount === 0 || product?.discount === '' ?
@@ -163,7 +211,22 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
               <span className="font-semibold text-2xl line-through text-gray-500">{formatPrice(product?.discount)}</span>
 
             </>
+          )} */}
+
+        <div className="flex items-center gap-4">
+          {/* MAIN PRICE */}
+          <span className="text-2xl font-bold text-red-600">
+            {formatPrice(price)}
+          </span>
+
+          {/* DISCOUNT PRICE */}
+          {discount > 0 && discount !== price && (
+            <span className="text-xl font-semibold line-through text-gray-500">
+              {formatPrice(discount)}
+            </span>
           )}
+        </div>
+
       </div>
       <div dangerouslySetInnerHTML={{ __html: product?.description?.slice(0, 200) }} className="quill-content capitalize" />
       {product?.variants?.length > 0 && (
@@ -345,26 +408,20 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
         //         )}
         //       </button>
         <button
-          disabled={isButtonDisabled}
+          disabled={availability.disabled}
           className={`
-    relative
-    mt-8
-    w-full
+    relative mt-8 w-full
     flex items-center justify-center gap-2
-    px-6 py-3
-    rounded-full
-    font-semibold
-    overflow-hidden
-    transition-all
-    duration-300
-    ${isButtonDisabled
+    px-6 py-3 rounded-full font-semibold
+    transition-all duration-300
+    ${availability.disabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-red-500 hover:bg-red-600 text-white shadow-md"
             }
   `}
           onClick={(e) => {
             e.stopPropagation();
-            if (isButtonDisabled) return;
+            if (availability.disabled) return;
 
             if (!getUserId) {
               setSignInModal(true);
@@ -379,28 +436,22 @@ export default function ProductInfo({ product, cartDetails, getUserId, getCartId
             );
           }}
         >
-
           <span className="relative z-10 flex items-center gap-2">
-            {!isButtonDisabled && <ShoppingBag className="h-5 w-5" />}
-            {getButtonText()}
+            {!availability.disabled && <ShoppingBag className="h-5 w-5" />}
+            {availability.text}
           </span>
 
-          {!isButtonDisabled && (
+          {!availability.disabled && (
             <span
               className="
-        absolute
-        inset-0
-        w-1/3
-        bg-gradient-to-l
-        from-white/60
-        to-transparent
-        opacity-40
-        skew-x-[-30deg]
-        animate-shine
+        absolute inset-0 w-1/3
+        bg-gradient-to-l from-white/60 to-transparent
+        opacity-40 skew-x-[-30deg] animate-shine
       "
             />
           )}
         </button>
+
 
       )}
       {signInmodal && (
