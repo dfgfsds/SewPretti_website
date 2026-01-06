@@ -82,13 +82,15 @@ export default function CustomerReviews() {
     <section className="py-20 bg-cusBgImage">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">What Our Customers Say</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-             Discover what our customers love about our trendy collections, premium quality, and comfortable fashion made just for you.
-          </p>
-        </div>
-
+        {reviews
+          .filter((review: any) => review?.verified_status === true)?.length > 0 && (
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">What Our Customers Say</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Discover what our customers love about our trendy collections, premium quality, and comfortable fashion made just for you.
+              </p>
+            </div>
+          )}
 
         {/* Reviews */}
         {reviews.length > 0 ? (
